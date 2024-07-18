@@ -1,130 +1,180 @@
+import sys
 import os
-import tkinter as tk
-from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
-import threading
-import subprocess
+import shutil
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox, QPushButton, \
+    QSpinBox, QTextEdit
+from PyQt5.QtCore import Qt
+from icrawler.builtin import GoogleImageCrawler
+import winreg
 
 
-class FileIndexerApp:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("File Indexer")
-        self.master.geometry("800x600")
+def get_desktop_path():
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
+    desktop_path = winreg.QueryValueEx(key, "Desktop")[0]
+    return desktop_path
 
-        self.file_index = {}
-        self.current_image = None
 
-        # Load the background image
-        bg_image = Image.open("mushroom_forest.jpeg")
-        bg_image = bg_image.resize((1020, 1000))
-        self.bg_photo = ImageTk.PhotoImage(bg_image)
+DESKTOP_PATH = get_desktop_path()
 
-        # Create a canvas and put the image on it
-        self.canvas = tk.Canvas(self.master, width=1024, height=800)
-        self.canvas.pack(fill="both", expand=True)
-        self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
 
-        # Create a frame for other widgets
-        self.frame = tk.Frame(self.canvas, bg='white', bd=5)
-        self.canvas.create_window(400, 300, window=self.frame, anchor="center")
+class ImageDownloaderApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
 
-        self.create_widgets()
+    def initUI(self):
+        layout = QVBoxLayout()
 
-    def create_widgets(self):
-        # Header
-        self.header_label = tk.Label(self.frame, text="File Indexer - made by Sacha Brassel",
-                                     font=("Arial", 16, "bold"))
-        self.header_label.pack(pady=10)
+        # Query input
+        query_layout = QHBoxLayout()
+        query_layout.addWidget(QLabel('Search Query:'))
+        self.query_input = QLineEdit()
+        query_layout.addWidget(self.query_input)
+        layout.addLayout(query_layout)
 
-        # Index button
-        self.index_button = tk.Button(self.frame, text="Index Files", command=self.start_indexing)
-        self.index_button.pack(pady=10)
+        # Number of images
+        num_images_layout = QHBoxLayout()
+        num_images_layout.addWidget(QLabel('Number of Images:'))
+        self.num_images_input = QSpinBox()
+        self.num_images_input.setRange(1, 100)
+        self.num_images_input.setValue(10)
+        num_images_layout.addWidget(self.num_images_input)
+        layout.addLayout(num_images_layout)
 
-        # Search entry
-        self.search_var = tk.StringVar()
-        self.search_entry = tk.Entry(self.frame, textvariable=self.search_var, width=50)
-        self.search_entry.pack(pady=10)
-        self.search_entry.bind('<Return>', lambda event: self.search_files())
+        # Color
+        color_layout = QHBoxLayout()
+        color_layout.addWidget(QLabel('Color:'))
+        self.color_combo = QComboBox()
+        self.color_combo.addItems(
+            ['Any', 'Color', 'Black and White', 'Transparent', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue',
+             'Purple', 'Pink', 'White', 'Gray', 'Black', 'Brown'])
+        color_layout.addWidget(self.color_combo)
+        layout.addLayout(color_layout)
 
-        # Search button
-        self.search_button = tk.Button(self.frame, text="Search", command=self.search_files)
-        self.search_button.pack(pady=5)
+        # Type
+        type_layout = QHBoxLayout()
+        type_layout.addWidget(QLabel('Type:'))
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(['Any', 'Face', 'Photo', 'Clipart', 'Line Drawing', 'Animated'])
+        type_layout.addWidget(self.type_combo)
+        layout.addLayout(type_layout)
 
-        # Results listbox
-        self.results_listbox = tk.Listbox(self.frame, width=80, height=20)
-        self.results_listbox.pack(pady=10)
-        self.results_listbox.bind('<<ListboxSelect>>', self.show_selected_file)
-        self.results_listbox.bind('<Double-1>', self.open_file_in_browser)
+        # Size
+        size_layout = QHBoxLayout()
+        size_layout.addWidget(QLabel('Size:'))
+        self.size_combo = QComboBox()
+        self.size_combo.addItems(['Any', 'Large', 'Medium', 'Icon', '>400*300', '>640*480', '>800*600', '>1024*768'])
+        size_layout.addWidget(self.size_combo)
+        layout.addLayout(size_layout)
 
-        # Image display
-        self.image_label = tk.Label(self.frame)
-        self.image_label.pack(pady=10)
+        # License
+        license_layout = QHBoxLayout()
+        license_layout.addWidget(QLabel('License:'))
+        self.license_combo = QComboBox()
+        self.license_combo.addItems(['Any', 'Creative Commons', 'Public Domain'])
+        license_layout.addWidget(self.license_combo)
+        layout.addLayout(license_layout)
 
-    def start_indexing(self):
-        threading.Thread(target=self.index_files, daemon=True).start()
+        # Format
+        format_layout = QHBoxLayout()
+        format_layout.addWidget(QLabel('Format:'))
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(['Any', 'JPG', 'GIF', 'PNG', 'BMP', 'SVG', 'WebP', 'ICO', 'RAW'])
+        format_layout.addWidget(self.format_combo)
+        layout.addLayout(format_layout)
 
-    def index_files(self):
-        self.file_index.clear()
-        for drive in self.get_drives():
-            for root, _, files in os.walk(drive):
-                for file in files:
-                    if file.lower().endswith(
-                            ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.pdf', '.doc', '.docx', '.html')):
-                        full_path = os.path.join(root, file)
-                        self.file_index[full_path.lower()] = full_path
-        messagebox.showinfo("Indexing Complete", f"Indexed {len(self.file_index)} files.")
+        # Time
+        time_layout = QHBoxLayout()
+        time_layout.addWidget(QLabel('Time:'))
+        self.time_combo = QComboBox()
+        self.time_combo.addItems(['Any time', 'Past 24 hours', 'Past 7 days', 'Past month', 'Past year'])
+        time_layout.addWidget(self.time_combo)
+        layout.addLayout(time_layout)
 
-    def get_drives(self):
-        if os.name == 'nt':  # Windows
-            return [f"{d}:\\" for d in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' if os.path.exists(f"{d}:")]
-        else:  # Unix-based systems
-            return ['/']
+        # Download button
+        self.download_button = QPushButton('Download Images')
+        self.download_button.clicked.connect(self.download_images)
+        layout.addWidget(self.download_button)
 
-    def search_files(self):
-        query = self.search_var.get().lower()
-        results = [path for path in self.file_index.values() if query in os.path.basename(path).lower()]
-        self.display_results(results)
+        # Result display
+        self.result_display = QTextEdit()
+        self.result_display.setReadOnly(True)
+        layout.addWidget(self.result_display)
 
-    def display_results(self, results):
-        self.results_listbox.delete(0, tk.END)
-        for result in results:
-            self.results_listbox.insert(tk.END, result)
+        # Add creator information
+        creator_label = QLabel('Created by Sacha Brassel')
+        creator_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(creator_label)
 
-    def show_selected_file(self, event):
-        selection = self.results_listbox.curselection()
-        if selection:
-            file_path = self.results_listbox.get(selection[0])
-            if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-                self.display_image(file_path)
+        self.setLayout(layout)
+        self.setWindowTitle('Advanced Image Downloader - Created by Sacha Brassel')
+        self.setGeometry(300, 300, 400, 550)
+
+    def download_images(self):
+        query = self.query_input.text()
+        num_images = self.num_images_input.value()
+        color = self.color_combo.currentText().lower().replace(' ', '').replace('any', '')
+        image_type = self.type_combo.currentText().lower().replace(' ', '-').replace('any', '')
+        size = self.size_combo.currentText().lower().replace('any', '')
+        license = self.license_combo.currentText().lower().replace(' ', '').replace('any', '')
+        format = self.format_combo.currentText().lower().replace('any', '')
+        time = self.time_combo.currentText()
+
+        download_dir = os.path.join(DESKTOP_PATH, f'downloaded_images_{query.replace(" ", "_")}')
+        if os.path.exists(download_dir):
+            shutil.rmtree(download_dir)
+        os.makedirs(download_dir)
+
+        filters = {}
+        if color:
+            filters['color'] = color
+        if image_type:
+            filters['type'] = image_type
+        if size:
+            filters['size'] = size
+        if license:
+            filters['license'] = license
+        if format:
+            filters['format'] = format
+        if time != 'Any time':
+            if time == 'Past 24 hours':
+                filters['date'] = 'pastday'
+            elif time == 'Past 7 days':
+                filters['date'] = 'pastweek'
             else:
-                self.image_label.config(image='')
-                self.image_label.image = None
+                # For 'Past month' and 'Past year', we won't set a date filter
+                # as icrawler doesn't support these options directly
+                pass
 
-    def display_image(self, image_path):
-        try:
-            image = Image.open(image_path)
-            image.thumbnail((300, 300))
-            photo = ImageTk.PhotoImage(image)
-            self.image_label.config(image=photo)
-            self.image_label.image = photo
-        except Exception as e:
-            messagebox.showerror("Error", f"Unable to display image: {str(e)}")
+        google_crawler = GoogleImageCrawler(
+            feeder_threads=1,
+            parser_threads=1,
+            downloader_threads=4,
+            storage={'root_dir': download_dir},
+            log_level=50
+        )
 
-    def open_file_in_browser(self, event):
-        selection = self.results_listbox.curselection()
-        if selection:
-            file_path = self.results_listbox.get(selection[0])
-            try:
-                if os.name == 'nt':  # Windows
-                    os.startfile(file_path)
-                elif os.name == 'posix':  # macOS and Linux
-                    subprocess.call(('xdg-open', file_path))
-            except Exception as e:
-                messagebox.showerror("Error", f"Unable to open file: {str(e)}")
+        google_crawler.crawl(keyword=query, max_num=num_images, filters=filters)
+
+        self.rename_images(download_dir, query)
+
+        downloaded_count = len(
+            [name for name in os.listdir(download_dir) if os.path.isfile(os.path.join(download_dir, name))])
+
+        result = f"Downloaded {downloaded_count} images to {download_dir}."
+        self.result_display.setText(result)
+
+    def rename_images(self, download_dir, query):
+        for i, filename in enumerate(os.listdir(download_dir)):
+            file_extension = os.path.splitext(filename)[1]
+            new_filename = f'{query.replace(" ", "_")}_{i:03d}{file_extension}'
+            old_path = os.path.join(download_dir, filename)
+            new_path = os.path.join(download_dir, new_filename)
+            os.rename(old_path, new_path)
 
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = FileIndexerApp(root)
-    root.mainloop()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = ImageDownloaderApp()
+    ex.show()
+    sys.exit(app.exec_())
