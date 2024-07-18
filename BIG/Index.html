@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Image Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Image Downloader</h1>
+    <div class="form-group">
+        <label for="query">Search Query:</label>
+        <input type="text" id="query" required>
+    </div>
+    <div class="form-group">
+        <label for="num_images">Number of Images:</label>
+        <input type="number" id="num_images" min="1" max="100" value="10">
+    </div>
+    <div class="form-group">
+        <label for="color">Color:</label>
+        <select id="color">
+            <option value="">Any</option>
+            <option value="color">Color</option>
+            <option value="blackandwhite">Black and White</option>
+            <option value="transparent">Transparent</option>
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="yellow">Yellow</option>
+            <option value="green">Green</option>
+            <option value="teal">Teal</option>
+            <option value="blue">Blue</option>
+            <option value="purple">Purple</option>
+            <option value="pink">Pink</option>
+            <option value="white">White</option>
+            <option value="gray">Gray</option>
+            <option value="black">Black</option>
+            <option value="brown">Brown</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <select id="type">
+            <option value="">Any</option>
+            <option value="face">Face</option>
+            <option value="photo">Photo</option>
+            <option value="clipart">Clipart</option>
+            <option value="line-drawing">Line Drawing</option>
+            <option value="animated">Animated</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="size">Size:</label>
+        <select id="size">
+            <option value="">Any</option>
+            <option value="large">Large</option>
+            <option value="medium">Medium</option>
+            <option value="icon">Icon</option>
+            <option value=">400*300">>400*300</option>
+            <option value=">640*480">>640*480</option>
+            <option value=">800*600">>800*600</option>
+            <option value=">1024*768">>1024*768</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="license">License:</label>
+        <select id="license">
+            <option value="">Any</option>
+            <option value="creativeCommons">Creative Commons</option>
+            <option value="publicDomain">Public Domain</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="format">Format:</label>
+        <select id="format">
+            <option value="">Any</option>
+            <option value="jpg">JPG</option>
+            <option value="gif">GIF</option>
+            <option value="png">PNG</option>
+            <option value="bmp">BMP</option>
+            <option value="svg">SVG</option>
+            <option value="webp">WebP</option>
+            <option value="ico">ICO</option>
+            <option value="raw">RAW</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="time">Time:</label>
+        <select id="time">
+            <option value="">Any time</option>
+            <option value="past-24-hours">Past 24 hours</option>
+            <option value="past-7-days">Past 7 days</option>
+            <option value="past-month">Past month</option>
+            <option value="past-year">Past year</option>
+        </select>
+    </div>
+    <button onclick="downloadImages()">Download Images</button>
+    <div id="result"></div>
+
+    <script>
+        function downloadImages() {
+            const query = document.getElementById('query').value;
+            const num_images = document.getElementById('num_images').value;
+            const color = document.getElementById('color').value;
+            const type = document.getElementById('type').value;
+            const size = document.getElementById('size').value;
+            const license = document.getElementById('license').value;
+            const format = document.getElementById('format').value;
+            const time = document.getElementById('time').value;
+
+            const params = new URLSearchParams({
+                query: query,
+                num_images: num_images,
+                color: color,
+                type: type,
+                size: size,
+                license: license,
+                format: format,
+                time: time
+            });
+
+            fetch(`/download_images?${params.toString()}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('result').innerText = data;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerText = 'An error occurred while downloading images.';
+                });
+        }
+    </script>
+</body>
+</html>
