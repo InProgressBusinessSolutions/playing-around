@@ -1,0 +1,28 @@
+<!-- quiz.html -->
+{% extends "base.html" %}
+{% block content %}
+<h1>Vocabulary Quiz</h1>
+<form id="quiz-form">
+    {% for word in words %}
+    <div>
+        <label for="word-{{ word.id }}">{{ word.word }}:</label>
+        <input type="text" id="word-{{ word.id }}" name="word-{{ word.id }}" required>
+    </div>
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
+<div id="results"></div>
+
+<script>
+    document.getElementById('quiz-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let correct = 0;
+        {% for word in words %}
+        if (document.getElementById('word-{{ word.id }}').value.toLowerCase().trim() === '{{ word.translation }}'.toLowerCase()) {
+            correct++;
+        }
+        {% endfor %}
+        document.getElementById('results').innerHTML = `You got ${correct} out of {{ words|length }} correct!`;
+    });
+</script>
+{% endblock %}

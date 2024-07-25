@@ -1,0 +1,13 @@
+<!-- home.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-4">Welcome to the Language Learning App</h1>
+    <h2>Choose a language to start learning:</h2>
+    <ul>
+        {% for language in languages %}
+        <li><a href="{{ url_for('language_dashboard', language_id=language.id) }}">{{ language.name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Language Learning App{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        nav { margin-bottom: 20px; }
+        nav a { margin-right: 10px; }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-pzjw8f+ua7Kw1TIqF2mIhtFfKlvwHJn6piF5AY7/ytLaxZO2qB+AMMC0Rz6jym1t" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Home</a>
+        </nav>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

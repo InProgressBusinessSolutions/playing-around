@@ -1,0 +1,8 @@
+<!-- lesson.html -->
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ lesson.title }}</h1>
+
+<div>{{ lesson.content | safe }}</div>
+<a href="{{ url_for('language_dashboard', language_id=lesson.language_id) }}">Back to Dashboard</a>
+{% endblock %}
