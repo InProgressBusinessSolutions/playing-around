@@ -1,0 +1,15 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error</h4>
+        <p>{{ message }}</p>
+        <hr>
+        <p class="mb-0">Please try again or contact the administrator if the problem persists.</p>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+</div>
+{% endblock %}
