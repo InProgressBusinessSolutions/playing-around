@@ -2,12 +2,31 @@
 
 {% block title %}Search Results{% endblock %}
 
+{% block styles %}
+{{super()}}
+<style>
+    .sentiment-chart {
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1>Search Results for "{{ query }}"</h1>
 
     <h2>Summary</h2>
     <p>{{ results.summary }}</p>
+
+    <h2>Sentiment Analysis</h2>
+    <div class="sentiment-chart">
+        <canvas id="overallSentimentChart"></canvas>
+    </div>
+    <div class="sentiment-chart">
+        <canvas id="sentencesSentimentChart"></canvas>
+    </div>
 
     <h2>Most Common Words</h2>
     <ul class="list-group">
@@ -22,4 +41,83 @@
     <br>
     <a href="{{ url_for('index') }}" class="btn btn-primary">New Search</a>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Overall sentiment chart
+    var overallCtx = document.getElementById('overallSentimentChart').getContext('2d');
+    var overallChart = new Chart(overallCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{
+                data: [
+                    {{ results.overall_sentiment.pos }},
+                    {{ results.overall_sentiment.neu }},
+                    {{ results.overall_sentiment.neg }}
+                ],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Overall Sentiment'
+            }
+        }
+    });
+
+    // Sentences sentiment chart
+    var sentencesCtx = document.getElementById('sentencesSentimentChart').getContext('2d');
+    var sentencesChart = new Chart(sentencesCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Sentence 1', 'Sentence 2', 'Sentence 3'],
+            datasets: [{
+                label: 'Positive',
+                data: [
+                    {% for score in results.sentiment_scores %}
+                    {{ score.pos }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#28a745'
+            }, {
+                label: 'Neutral',
+                data: [
+                    {% for score in results.sentiment_scores %}
+                    {{ score.neu }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#ffc107'
+            }, {
+                label: 'Negative',
+                data: [
+                    {% for score in results.sentiment_scores %}
+                    {{ score.neg }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#dc3545'
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Sentiment by Sentence'
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                },
+                y: {
+                    stacked: true
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

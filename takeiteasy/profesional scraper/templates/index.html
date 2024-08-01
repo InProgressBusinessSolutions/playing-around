@@ -3,13 +3,56 @@
 
 {% block title %}Web Scraper{% endblock %}
 
+{% block styles %}
+{{super()}}
+<style>
+    #loading {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 9999;
+    }
+    .spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1>Web Scraper</h1>
-    <form method="POST" action="{{ url_for('index') }}">
+    <form method="POST" action="{{ url_for('index') }}" id="search-form">
         {{ form.hidden_tag() }}
         {{ wtf.form_field(form.query) }}
         {{ wtf.form_field(form.submit) }}
     </form>
 </div>
+<div id="loading">
+    <div class="spinner"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script>
+    document.getElementById('search-form').onsubmit = function() {
+        document.getElementById('loading').style.display = 'block';
+    };
+</script>
 {% endblock %}

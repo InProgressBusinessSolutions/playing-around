@@ -10,8 +10,9 @@ import requests
 from bs4 import BeautifulSoup
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.probability import FreqDist
+from nltk.sentiment import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'  # Replace with a real secret key
@@ -21,6 +22,7 @@ ckeditor = CKEditor(app)
 # Download necessary NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('vader_lexicon')
 
 
 class SearchForm(FlaskForm):
@@ -61,12 +63,19 @@ def scrape_and_analyze(query):
         most_common = fdist.most_common(10)
 
         # Get a summary (first 3 sentences)
-        sentences = text.split('.')[:3]
-        summary = '. '.join(sentences) + '.'
+        sentences = sent_tokenize(text)[:3]
+        summary = ' '.join(sentences)
+
+        # Perform sentiment analysis
+        sia = SentimentIntensityAnalyzer()
+        sentiment_scores = [sia.polarity_scores(sentence) for sentence in sentences]
+        overall_sentiment = sia.polarity_scores(text)
 
         return {
             'most_common_words': most_common,
-            'summary': summary
+            'summary': summary,
+            'sentiment_scores': sentiment_scores,
+            'overall_sentiment': overall_sentiment
         }
     except requests.RequestException as e:
         app.logger.error(f"Error scraping content: {str(e)}")
