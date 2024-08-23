@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Pronunciation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .word-container {
+            margin-bottom: 20px;
+        }
+        .pronunciation-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Practice Pronunciation</h1>
+    <div class="word-container">
+        <h2>{{ word.word }}</h2>
+        <p>Translation: {{ word.translation }}</p>
+        <p>Pronunciation: {{ word.pronunciation }}</p>
+        <button class="pronunciation-button" onclick="playPronunciation({{ word.id }})">Listen to Pronunciation</button>
+    </div>
+
+    <script>
+        function playPronunciation(wordId) {
+            const audio = new Audio(`/get_pronunciation/${wordId}`);
+            audio.play();
+        }
+    </script>
+</body>
+</html>

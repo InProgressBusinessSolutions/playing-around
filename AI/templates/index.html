@@ -1,0 +1,103 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container mt-5">
+        <h1 class="mb-4">To-Do List</h1>
+
+        <!-- Form to add new todo -->
+        <form @submit.prevent="addTodo" class="mb-4">
+            <div class="mb-3">
+                <input v-model="newTodo.title" type="text" class="form-control" placeholder="Title" required>
+            </div>
+            <div class="mb-3">
+                <textarea v-model="newTodo.description" class="form-control" placeholder="Description"></textarea>
+            </div>
+            <div class="mb-3">
+                <input v-model="newTodo.due_date" type="date" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Todo</button>
+        </form>
+
+        <!-- List of todos -->
+        <ul class="list-group">
+            <li v-for="todo in todos" :key="todo.id" class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 :class="{ 'text-decoration-line-through': todo.completed }">{{ todo.title }}</h5>
+                        <p>{{ todo.description }}</p>
+                        <small v-if="todo.due_date">Due: {{ formatDate(todo.due_date) }}</small>
+                    </div>
+                    <div>
+                        <button @click="toggleComplete(todo)" class="btn btn-sm" :class="todo.completed ? 'btn-success' : 'btn-outline-success'">
+                            {{ todo.completed ? 'Completed' : 'Mark Complete' }}
+                        </button>
+                        <button @click="deleteTodo(todo)" class="btn btn-sm btn-danger ms-2">Delete</button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                todos: [],
+                newTodo: {
+                    title: '',
+                    description: '',
+                    due_date: ''
+                }
+            },
+            methods: {
+                fetchTodos() {
+                    axios.get('/api/todos')
+                        .then(response => {
+                            this.todos = response.data;
+                        })
+                        .catch(error => console.error(error));
+                },
+                addTodo() {
+                    axios.post('/api/todos', this.newTodo)
+                        .then(response => {
+                            this.todos.push(response.data);
+                            this.newTodo = { title: '', description: '', due_date: '' };
+                        })
+                        .catch(error => console.error(error));
+                },
+                toggleComplete(todo) {
+                    axios.put(`/api/todos/${todo.id}`, { ...todo, completed: !todo.completed })
+                        .then(response => {
+                            const index = this.todos.findIndex(t => t.id === todo.id);
+                            this.todos.splice(index, 1, response.data);
+                        })
+                        .catch(error => console.error(error));
+                },
+                deleteTodo(todo) {
+                    axios.delete(`/api/todos/${todo.id}`)
+                        .then(() => {
+                            const index = this.todos.findIndex(t => t.id === todo.id);
+                            this.todos.splice(index, 1);
+                        })
+                        .catch(error => console.error(error));
+                },
+                formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString();
+                }
+            },
+            mounted() {
+                this.fetchTodos();
+            }
+        });
+    </script>
+</body>
+</html>

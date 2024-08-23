@@ -1,0 +1,25 @@
+<!-- edit.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Edit Story</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ story.title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="10" required>{{ story.content }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="tone" class="form-label">Tone</label>
+            <input type="text" class="form-control" id="tone" name="tone" value="{{ story.tone }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="genre" class="form-label">Genre</label>
+            <input type="text" class="form-control" id="genre" name="genre" value="{{ story.genre }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Story</button>
+    </form>
+{% endblock %}
